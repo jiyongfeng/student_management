@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-11 11:59:32
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-11 16:30:40
+ * @LastEditTime : 2024-07-11 20:06:19
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -19,27 +19,33 @@ import seaborn as sns
 # 设置Seaborn样式
 sns.set_theme(style="whitegrid")
 
-# 从配置文件读取数据库连接信息
-
 
 def get_db_config():
+    """读取并返回数据库配置信息
+
+    returns:
+        dict:包含数据库配置信息的字典
+    """
+    # 创建ConfigParser对象，用于解析配置文件
     config = configparser.ConfigParser()
+    # 读取配置文件'db_config.ini'，并解析其中的配置信息
     config.read('db_config.ini')
+    # 返回配置文件中'database'部分的配置信息
     return config['database']
 
-
-# def get_connection():
-#     try:
-#         conn = pymysql.connect(**db_config)
-#         print("Connected to the database.")
-#         return conn
-#     except pymysql.Error as e:
-#         print(f"Error connecting to MySQL: {e}")
-#         return None
-
 # 连接到MySQL数据库的函数
-# 连接到MySQL数据库的函数
+
+
 def get_connection():
+    """
+    读取并返回数据库配置信息。
+
+    该函数从名为'db_config.ini'的配置文件中读取数据库配置信息。
+    返回一个字典，包含配置文件中'database'部分的所有键值对。
+
+    returns:
+        dict: 包含数据库配置信息的字典
+    """
     db_config = get_db_config()
     try:
         connection = pymysql.connect(
@@ -60,7 +66,18 @@ def get_connection():
 # 检查并插入表数据
 
 
-def check_and_insert(connection, table_name, name, value):
+def check_and_insert(connection: object, table_name: str, name: str, value: str):
+    """检查数据库中是否存在指定名称的记录，如果不存在，则插入该记录
+
+    Args:
+        connection (str):数据库连接对象
+        table_name (str): 表名
+        name (str): 列名
+        value (str): 列的值
+
+    Returns:
+        str: 插入的值
+    """
     try:
         with connection.cursor() as cursor:
             # 查询是否存在该名称
@@ -74,34 +91,17 @@ def check_and_insert(connection, table_name, name, value):
                 cursor.execute(sql_insert, (value,))
                 connection.commit()
                 st.success(f"成功插入 {value} 到表 {table_name}")
-                return value
-            else:
-                return value
-
-    except Exception as e:
+            return value
+    except pymysql.MySQLError as e:
         st.error(f"操作失败：{str(e)}")
 
 
-def add_course():
-    st.subheader("增加课程")
-    course_name = st.text_input("课程名称")
-    create_by = st.text_input("创建者")
-    if st.button("提交"):
-        connection = get_connection()
-        st.success(connection)
-
-        try:
-            with connection.cursor() as cursor:
-                sql = "INSERT INTO tb_course (course_name, create_by) VALUES (%s, %s)"
-                cursor.execute(sql, (course_name, create_by))
-            connection.commit()
-            st.success("课程添加成功")
-        finally:
-            connection.close()
-
-
 # 显示课程信息的函数（以表格形式）
+
+
 def view_courses():
+    """课程管理
+    """
     st.subheader("课程管理")
 
     # 获取所有课程信息
@@ -112,14 +112,20 @@ def view_courses():
                 sql = "SELECT * FROM tb_course"
                 cursor.execute(sql)
                 courses = cursor.fetchall()
+                df_courses = pd.DataFrame(courses)
+        except pymysql.MySQLError as e:
+            st.error(f"操作失败：{str(e)}")
         finally:
             connection.close()
 
     # 显示表格并添加、编辑、删除功能
     if courses:
         # 显示课程信息的表格
-        st.table(courses)
+        # df_course_name_sorted = df_courses.sort_values(by='course_name')
+        # st.dataframe(df_course_name_sorted, hide_index=True)
 
+        st.dataframe(df_courses, column_order=[
+                     "course_name", "create_by", 'create_at', "updated_by", 'updated_at'], hide_index=True)
         # 添加新课程
         st.subheader("添加课程")
         new_course_name = st.text_input("请输入新课程名称")
@@ -133,6 +139,7 @@ def view_courses():
                         cursor.execute(sql, (new_course_name, create_by))
                         connection.commit()
                         st.success("课程添加成功")
+                        st.rerun()
                 except pymysql.MySQLError as e:
                     st.error(f"发生错误: {e}")
                 finally:
@@ -158,6 +165,7 @@ def view_courses():
                                 sql, (new_course_name, updated_by, edit_course_name))
                             connection.commit()
                             st.success("课程信息更新成功")
+                            st.rerun()
                     except pymysql.MySQLError as e:
                         st.error(f"发生错误: {e}")
                     finally:
@@ -183,27 +191,20 @@ def view_courses():
     else:
         st.write("暂无课程信息")
 
+# 获取所有课程
 
-def edit_course():
-    st.subheader("编辑课程")
+
+def get_courses():
     connection = get_connection()
     try:
         with connection.cursor() as cursor:
-            sql = "SELECT * FROM tb_course"
-            cursor.execute(sql)
+            cursor.execute("SELECT * FROM tb_course")
             courses = cursor.fetchall()
-        course_dict = {course['course_name']: course['cou_id']
-                       for course in courses}
-        selected_course = st.selectbox("选择课程", list(course_dict.keys()))
-        new_name = st.text_input("新名称")
-        updated_by = st.text_input("更新者")
-        if st.button("提交"):
-            with connection.cursor() as cursor:
-                sql = "UPDATE tb_course SET course_name=%s, updated_by=%s WHERE cou_id=%s"
-                cursor.execute(sql, (new_name, updated_by,
-                               course_dict[selected_course]))
-            connection.commit()
-            st.success("课程更新成功")
+            df_courses = pd.DataFrame(courses)
+            return df_courses
+    except Exception as e:
+        st.error(f"获取课程数据失败：{str(e)}")
+        return pd.DataFrame()
     finally:
         connection.close()
 
@@ -307,7 +308,7 @@ def edit_student():
             sql = "SELECT * FROM tb_student"
             cursor.execute(sql)
             students = cursor.fetchall()
-        student_dict = {student['student_name']: student['stu_id'] for student in students}
+        student_dict = {student['student_name']                        : student['stu_id'] for student in students}
         selected_student = st.selectbox("选择学生", list(student_dict.keys()))
         new_name = st.text_input("新姓名")
         updated_by = st.text_input("更新者")
