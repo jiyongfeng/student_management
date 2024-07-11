@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-11 11:59:32
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-11 14:19:14
+ * @LastEditTime : 2024-07-11 16:30:40
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -20,6 +20,8 @@ import seaborn as sns
 sns.set_theme(style="whitegrid")
 
 # 从配置文件读取数据库连接信息
+
+
 def get_db_config():
     config = configparser.ConfigParser()
     config.read('db_config.ini')
@@ -54,6 +56,30 @@ def get_connection():
         st.error(f"数据库连接失败: {e}")
         return None
 # 课程管理
+
+# 检查并插入表数据
+
+
+def check_and_insert(connection, table_name, name, value):
+    try:
+        with connection.cursor() as cursor:
+            # 查询是否存在该名称
+            sql_select = f"SELECT * FROM {table_name} WHERE {name} = %s"
+            cursor.execute(sql_select, (value,))
+            result = cursor.fetchone()
+
+            if result is None:
+                # 如果不存在，则插入新数据
+                sql_insert = f"INSERT INTO {table_name} ({name}) VALUES (%s)"
+                cursor.execute(sql_insert, (value,))
+                connection.commit()
+                st.success(f"成功插入 {value} 到表 {table_name}")
+                return value
+            else:
+                return value
+
+    except Exception as e:
+        st.error(f"操作失败：{str(e)}")
 
 
 def add_course():
@@ -281,8 +307,7 @@ def edit_student():
             sql = "SELECT * FROM tb_student"
             cursor.execute(sql)
             students = cursor.fetchall()
-        student_dict = {student['student_name']
-            : student['stu_id'] for student in students}
+        student_dict = {student['student_name']: student['stu_id'] for student in students}
         selected_student = st.selectbox("选择学生", list(student_dict.keys()))
         new_name = st.text_input("新姓名")
         updated_by = st.text_input("更新者")
@@ -307,8 +332,7 @@ def add_score():
             sql = "SELECT * FROM tb_student"
             cursor.execute(sql)
             students = cursor.fetchall()
-        student_dict = {student['student_name']
-            : student['stu_id'] for student in students}
+        student_dict = {student['student_name']: student['stu_id'] for student in students}
         selected_student = st.selectbox("选择学生", list(student_dict.keys()))
 
         with connection.cursor() as cursor:
@@ -373,7 +397,7 @@ def view_scores():
         try:
             with connection.cursor() as cursor:
                 # 查询所有项目和学科
-                cursor.execute("SELECT * FROM tb_exam")
+                cursor.execute("SELECT * FROM tb_exam order by exam_name asc")
                 exams = cursor.fetchall()
                 cursor.execute("SELECT * FROM tb_course")
                 courses = cursor.fetchall()
@@ -426,15 +450,22 @@ def view_scores():
     # 显示成绩表格
     if scores:
         df_scores = pd.DataFrame(scores)
-        st.dataframe(df_scores)
+        # 对 exam_name 列按名称排序
+        df_scores_sorted = df_scores.sort_values(by='exam_name')
+        st.dataframe(df_scores_sorted)
 
-        # 显示直方图
-        st.subheader("成绩分布直方图")
-        fig, ax = plt.subplots(figsize=(10, 6))
-        sns.histplot(df_scores['score'], kde=True, ax=ax)
-        ax.set_xlabel('score')
-        ax.set_ylabel('frenquency')
-        st.pyplot(fig)
+        if selected_course != '所有学科' and selected_exam == '所有项目':
+            # 显示直方图
+            st.subheader(f"{selected_course}学科的成绩分布")
+            fig, ax = plt.subplots(figsize=(10, 6))
+            sns.lineplot(ax=ax, data=df_scores_sorted,
+                         x='exam_name', y='score', marker='o')
+            ax.set_xlabel('项目', fontproperties='SimHei')
+            ax.set_ylabel('成绩', fontproperties='SimHei')
+            plt.title(f"{selected_course}学科的成绩分布",
+                      fontproperties='SimHei')
+            plt.xticks(rotation=45)
+            st.pyplot(fig)
     else:
         st.write("暂无符合条件的成绩记录")
 
@@ -467,6 +498,75 @@ def edit_score():
             st.success("成绩更新成功")
     finally:
         connection.close()
+
+# 导入csv格式的成绩文件
+
+
+def import_scores():
+    st.subheader("导入成绩")
+    st.sidebar.subheader("上传 CSV 文件")
+    uploaded_file = st.sidebar.file_uploader("选择一个 CSV 文件", type=['csv'])
+    if uploaded_file is not None:
+        st.sidebar.success('文件上传成功！')
+
+        # 显示上传文件的相关信息
+        df = pd.read_csv(uploaded_file)
+
+        # 检查列名合法性
+        required_columns = ['exam', 'course', 'score', 'student']
+        if not all(col in df.columns for col in required_columns):
+            st.error("CSV 文件缺失必要的列名（exam, course, score, student）")
+
+        # 显示数据表格
+        st.subheader("导入的数据预览")
+        st.write(df)
+
+        if st.button("导入数据到数据库"):
+            connection = get_connection()
+            if connection:
+                try:
+                    with connection.cursor() as cursor:
+                        # 导入数据
+                        for index, row in df.iterrows():
+
+                            # 分别检查考试、学科和学生是否存在，如果不存在则插入
+
+                            exam_name = check_and_insert(
+                                connection, 'tb_exam', 'exam_name', row['exam'])
+                            course_name = check_and_insert(
+                                connection, 'tb_course', 'course_name', row['course'])
+                            student_name = check_and_insert(
+                                connection, 'tb_student', 'student_name', row['student'])
+
+                            if exam_name is None or course_name is None or student_name is None:
+                                st.error("插入过程中出现错误，终止导入")
+                                return
+
+                            # 获取刚插入的或者已经存在的 ID
+                            cursor.execute(
+                                "SELECT exam_id FROM tb_exam WHERE exam_name = %s", (exam_name,))
+                            exam_id = cursor.fetchone()['exam_id']
+
+                            cursor.execute(
+                                "SELECT cou_id FROM tb_course WHERE course_name = %s", (course_name,))
+                            course_id = cursor.fetchone()['cou_id']
+
+                            cursor.execute(
+                                "SELECT stu_id FROM tb_student WHERE student_name = %s", (student_name,))
+                            student_id = cursor.fetchone()['stu_id']
+
+                            sql_insert = "INSERT INTO tb_scores (exam_id, course_id, student_id, score) VALUES (%s, %s, %s, %s)"
+                            cursor.execute(
+                                sql_insert, (exam_id, course_id, student_id, row['score']))
+                        connection.commit()
+                    st.success("导入数据成功")
+
+                except Exception as e:
+                    st.error(f"导入数据失败: {e}")
+
+                finally:
+                    connection.close()
+
 
 # Streamlit 应用的主函数
 
@@ -504,7 +604,7 @@ def main():
     elif menu_option == "成绩管理":
         sub_menu_option = st.sidebar.radio(
             "请选择操作",
-            ["增加成绩", "显示成绩", "编辑成绩"]
+            ["增加成绩", "显示成绩", "编辑成绩", "导入成绩"]
         )
         if sub_menu_option == "增加成绩":
             add_score()
@@ -512,6 +612,8 @@ def main():
             view_scores()
         elif sub_menu_option == "编辑成绩":
             edit_score()
+        elif sub_menu_option == "导入成绩":
+            import_scores()
 
 
 if __name__ == "__main__":
