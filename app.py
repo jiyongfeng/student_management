@@ -16,6 +16,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# 设置Seaborn样式
+sns.set_theme(style="whitegrid")
 
 # 从配置文件读取数据库连接信息
 def get_db_config():
