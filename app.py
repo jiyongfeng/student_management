@@ -5,19 +5,24 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-11 11:59:32
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-11 20:06:19
- * @Description  :
+ * @LastEditTime : 2024-07-11 22:12:10
+ * @Description  : 成绩分析器
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
 import configparser
-import pymysql
-import streamlit as st
-import pandas as pd
+import logging
+
 import matplotlib.pyplot as plt
+import pandas as pd
+import pymysql
 import seaborn as sns
+import streamlit as st
 
 # 设置Seaborn样式
 sns.set_theme(style="whitegrid")
+
+# 配置日志记录
+logging.basicConfig(level=logging.DEBUG)
 
 
 def get_db_config():
@@ -59,8 +64,8 @@ def get_connection():
         )
         return connection
     except pymysql.MySQLError as e:
-        st.error(f"数据库连接失败: {e}")
-        return None
+        st.error(f"数据库连接失败: {str(e)}")
+        logging.error("数据库连接失败: %s", str(e))
 # 课程管理
 
 # 检查并插入表数据
@@ -115,6 +120,8 @@ def view_courses():
                 df_courses = pd.DataFrame(courses)
         except pymysql.MySQLError as e:
             st.error(f"操作失败：{str(e)}")
+            logging.error("操作失败：%s", str(e))
+            return
         finally:
             connection.close()
 
@@ -141,7 +148,7 @@ def view_courses():
                         st.success("课程添加成功")
                         st.rerun()
                 except pymysql.MySQLError as e:
-                    st.error(f"发生错误: {e}")
+                    st.error(f"发生错误: {str(e)}")
                 finally:
                     connection.close()
 
@@ -167,7 +174,7 @@ def view_courses():
                             st.success("课程信息更新成功")
                             st.rerun()
                     except pymysql.MySQLError as e:
-                        st.error(f"发生错误: {e}")
+                        st.error(f"发生错误: {str(e)}")
                     finally:
                         connection.close()
 
@@ -185,7 +192,7 @@ def view_courses():
                         connection.commit()
                         st.success("课程删除成功")
                 except pymysql.MySQLError as e:
-                    st.error(f"发生错误: {e}")
+                    st.error(f"发生错误: {str(e)}")
                 finally:
                     connection.close()
     else:
@@ -562,8 +569,8 @@ def import_scores():
                         connection.commit()
                     st.success("导入数据成功")
 
-                except Exception as e:
-                    st.error(f"导入数据失败: {e}")
+                except pymysql.MySQLError as e:
+                    st.error(f"导入数据失败: {str(e)}")
 
                 finally:
                     connection.close()
