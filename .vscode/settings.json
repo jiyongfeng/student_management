@@ -1,0 +1,12 @@
+{
+    "sqltools.useNodeRuntime": true,
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "exam_score",
+            "group": "jimmy",
+            "database": "${workspaceFolder:成绩查询}/exam_scores.db"
+        }
+    ]
+}
