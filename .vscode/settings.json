@@ -2,11 +2,17 @@
     "sqltools.useNodeRuntime": true,
     "sqltools.connections": [
         {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
             "previewLimit": 50,
-            "driver": "SQLite",
-            "name": "exam_score",
-            "group": "jimmy",
-            "database": "${workspaceFolder:成绩查询}/exam_scores.db"
+            "server": "synology.yunnote.cn",
+            "port": 23306,
+            "driver": "MySQL",
+            "name": "student_management",
+            "database": "student_management",
+            "username": "score"
         }
     ]
 }
