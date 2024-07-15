@@ -1,0 +1,7 @@
+streamlit-extras
+pandas
+numpy = 1.26.4
+matplotlib
+mysql-connector-python
+pymysql
+pyparsing

@@ -5,13 +5,15 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-11 22:39:38
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-12 10:15:00
+ * @LastEditTime : 2024-07-14 13:47:30
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
 import configparser
 import logging
 import pymysql
+
+import streamlit as st
 
 
 def get_db_config(config_path: str = "config.ini"):
@@ -91,3 +93,29 @@ def check_and_insert(connection: object, table_name: str, name: str, value: str)
             return value
     except pymysql.MySQLError as e:
         st.error(f"操作失败：{str(e)}")
+
+
+def handle_database_error(error):
+    # 对用户隐藏具体的错误细节，只显示一般性错误消息
+    show_error_message("数据库操作失败。")
+    # 在日志中记录详细的错误信息，以便于问题的追踪和定位
+    log_error("数据库操作失败：", error)
+
+
+def handle_general_error(error):
+    # 对于非预期的异常，同样隐藏具体的错误细节
+    show_error_message("发生未知错误。")
+    # 在日志中记录详细的错误信息
+    log_error("发生未知错误：", error)
+
+
+def show_error_message(message):
+    # 假设st.error是一个UI组件的方法，用于显示错误消息
+    st.error(message)
+    # 可以考虑将错误消息也记录到日志中，但避免敏感信息泄露
+    logging.error("向用户显示错误：%s", message)
+
+
+def log_error(prefix, error):
+    # 记录错误日志，包括错误前缀和错误详细信息
+    logging.error("%s %s", prefix, str(error))
