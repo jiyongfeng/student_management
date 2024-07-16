@@ -5,18 +5,15 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-13 10:14:11
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-15 22:40:26
+ * @LastEditTime : 2024-07-16 18:10:27
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
-import logging
+from utils.logger import logger
+from datetime import datetime
 
 import streamlit as st
 
-# 配置日志记录
-logging.basicConfig(level=logging.ERROR)
-
-ROLES = [None, "Requester", "Responder", "Admin"]
 
 # 定义会话状态、用户名、页面等全局变量
 if 'username' not in st.session_state:
@@ -29,6 +26,9 @@ if "role" not in st.session_state:
     st.session_state.role = None
 
 
+ROLES = [None, "Requester", "Responder", "Admin"]
+
+
 @st.experimental_dialog("请确认是否退出系统?")
 def logout_confim():
     """ 退出系统
@@ -38,6 +38,7 @@ def logout_confim():
     with col2:
         if st.button("退出"):
             st.session_state.logged_in = False
+            logger.info("%s 退出系统", st.session_state.username)
             st.rerun()
     with col3:
         if st.button("取消"):
@@ -54,9 +55,12 @@ def login():
     # role = st.selectbox("Choose your role", ROLES)
 
     if st.button("登录"):
-        if username == "admin" and password == "J9Ese^%nSs#$z2":
+        if username == st.secrets.admin.username and password == st.secrets.admin.password:
             st.session_state.logged_in = True
+            st.session_state.username = username
             st.success("登录成功！")
+            # 记录日志
+            logger.info("%s 登录系统", st.session_state.username)
             st.rerun()
         else:
             st.error("用户名或密码错误！")

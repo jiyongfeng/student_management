@@ -5,15 +5,16 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-11 22:39:38
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-14 13:47:30
+ * @LastEditTime : 2024-07-16 18:09:32
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
 import configparser
-import logging
-import pymysql
 
+import pymysql
 import streamlit as st
+
+from utils.logger import logger
 
 
 def get_db_config(config_path: str = "config.ini"):
@@ -35,11 +36,11 @@ def get_db_config(config_path: str = "config.ini"):
 # 连接到MySQL数据库的函数
 
 
-def get_connection(config_path: str = 'config.ini'):
+def get_connection():
     """
     读取并返回数据库配置信息。
 
-    该函数从名为'db_config.ini'的配置文件中读取数据库配置信息。
+    该函数从名为'secrets.toml'的配置文件中读取数据库配置信息。
     返回一个字典，包含配置文件中'database'部分的所有键值对。
 
     args:
@@ -48,21 +49,21 @@ def get_connection(config_path: str = 'config.ini'):
     returns:
         dict: 包含数据库配置信息的字典
     """
-    db_config = get_db_config(config_path)
+
     try:
         connection = pymysql.connect(
-            host=db_config['host'],
-            user=db_config['user'],
-            port=int(db_config['port']),
-            password=db_config['password'],
-            db=db_config['db'],
-            charset=db_config['charset'],
+            host=st.secrets.database.host,
+            user=st.secrets.database.user,
+            port=st.secrets.database.port,
+            password=st.secrets.database.password,
+            db=st.secrets.database.db,
+            charset=st.secrets.database.charset,
             cursorclass=pymysql.cursors.DictCursor
         )
         return connection
     except pymysql.MySQLError as e:
         st.error(f"数据库连接失败: {str(e)}")
-        logging.error("数据库连接失败: %s", str(e))
+        logger.error("数据库连接失败: %s", str(e))
 
 
 def check_and_insert(connection: object, table_name: str, name: str, value: str):
@@ -113,9 +114,9 @@ def show_error_message(message):
     # 假设st.error是一个UI组件的方法，用于显示错误消息
     st.error(message)
     # 可以考虑将错误消息也记录到日志中，但避免敏感信息泄露
-    logging.error("向用户显示错误：%s", message)
+    logger.error("发生错误：%s", message)
 
 
 def log_error(prefix, error):
     # 记录错误日志，包括错误前缀和错误详细信息
-    logging.error("%s %s", prefix, str(error))
+    logger.error("%s %s", prefix, str(error))

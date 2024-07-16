@@ -5,12 +5,13 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-14 15:52:17
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-16 09:36:44
+ * @LastEditTime : 2024-07-16 17:05:45
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
-import streamlit as st
 import time
+
+import streamlit as st
 
 
 def page1():

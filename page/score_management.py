@@ -21,18 +21,18 @@ from utils.database import get_connection, check_and_insert
 # 配置日志记录
 logging.basicConfig(level=logging.DEBUG)
 
-CONFIG_FILE = "config.ini"
+= "config.ini"
 
 
 @st.experimental_dialog("添加成绩")
 def add_score():
-    connection = get_connection(CONFIG_FILE)
+    connection = get_connection()
     try:
         with connection.cursor() as cursor:
             sql = "SELECT * FROM tb_student"
             cursor.execute(sql)
             students = cursor.fetchall()
-        student_dict = {student['student_name']                        : student['stu_id'] for student in students}
+        student_dict = {student['student_name']: student['stu_id'] for student in students}
         selected_student = st.selectbox("选择学生", list(student_dict.keys()))
 
         with connection.cursor() as cursor:
@@ -70,7 +70,7 @@ def add_score():
 def view_scores():
 
     # 获取所有项目和学科信息
-    connection = get_connection(CONFIG_FILE)
+    connection = get_connection()
     if connection:
         try:
             with connection.cursor() as cursor:
@@ -89,7 +89,7 @@ def view_scores():
         "选择学科", ["所有学科"] + [course['course_name'] for course in courses])
 
     # 根据选择的项目和学科进行筛选
-    connection = get_connection(CONFIG_FILE)
+    connection = get_connection()
     if connection:
         try:
             with connection.cursor() as cursor:
@@ -151,7 +151,7 @@ def view_scores():
 @st.experimental_dialog("修改成绩")
 def edit_score():
     st.subheader("修改成绩")
-    connection = get_connection(CONFIG_FILE)
+    connection = get_connection()
     try:
         with connection.cursor() as cursor:
             sql = """
@@ -201,7 +201,7 @@ def import_scores():
         st.write(df)
 
         if st.button("导入数据到数据库"):
-            connection = get_connection(CONFIG_FILE)
+            connection = get_connection()
             if connection:
                 try:
                     with connection.cursor() as cursor:

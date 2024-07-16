@@ -5,11 +5,11 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-15 22:57:46
+ * @LastEditTime : 2024-07-16 17:16:17
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
-import logging
+from utils.logger import logger
 from datetime import datetime
 
 import pandas as pd
@@ -20,22 +20,17 @@ import streamlit as st
 from utils.database import *
 
 
-CONFIG_FILE = "config.ini"
-
-# 配置日志记录
-logging.basicConfig(level=logging.ERROR)
-
 st.subheader("考试管理")
 
 
 def add_exam(exam):
-    connection = get_connection(CONFIG_FILE)
+    connection = get_connection()
     if connection:
         try:
             with connection.cursor() as cursor:
                 sql = "INSERT INTO tb_exam (exam_name, create_by,updated_by, create_at,updated_at) VALUES (%s, %s, %s,%s,%s)"
                 cursor.execute(
-                    sql, (exam['exam_name'], exam['create_by'], exam['updated_by'], datetime.now(), datetime.now()))
+                    sql, (exam['exam_name'], st.session_state.username, st.session_state.username, datetime.now(), datetime.now()))
             connection.commit()
         except pymysql.MySQLError as db_error:
             handle_database_error(db_error)
@@ -46,7 +41,7 @@ def add_exam(exam):
 
 
 def load_exams():
-    connection = get_connection(CONFIG_FILE)
+    connection = get_connection()
     try:
         with connection.cursor() as cursor:
             sql = "SELECT * FROM tb_exam"
@@ -64,13 +59,13 @@ def load_exams():
 
 
 def insert_exam(exam):
-    connection = get_connection(CONFIG_FILE)
+    connection = get_connection()
     if connection:
         try:
             with connection.cursor() as cursor:
                 sql = "INSERT INTO tb_exam (exam_name, create_by,updated_by,create_at,updated_at) VALUES (%s, %s, %s,%s,%s)"
                 cursor.execute(
-                    sql, (exam['exam_name'], exam['create_by'], exam['updated_by'], datetime.now(), datetime.now()))
+                    sql, (exam['exam_name'], st.session_state.username, st.session_state.username, datetime.now(), datetime.now()))
                 connection.commit()
         except pymysql.MySQLError as db_error:
             handle_database_error(db_error)
@@ -81,12 +76,12 @@ def insert_exam(exam):
 
 
 def update_exam(exam):
-    connection = get_connection(CONFIG_FILE)
+    connection = get_connection()
     try:
         with connection.cursor() as cursor:
             sql = "UPDATE tb_exam SET exam_name=%s, create_by = %s, updated_by = %s, updated_at = %s WHERE exam_id = %s"
             cursor.execute(sql, (exam['exam_name'], exam['create_by'],
-                                 exam['updated_by'], datetime.now(), exam['exam_id']))
+                                 st.session_state.username, datetime.now(), exam['exam_id']))
         connection.commit()
     except pymysql.MySQLError as db_error:
         handle_database_error(db_error)
@@ -97,7 +92,7 @@ def update_exam(exam):
 
 
 def delete_exam(delete_exam_id):
-    connection = get_connection(CONFIG_FILE)
+    connection = get_connection()
     if connection:
         try:
             with connection.cursor() as cursor:

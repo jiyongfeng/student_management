@@ -5,11 +5,10 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-15 22:07:15
+ * @LastEditTime : 2024-07-16 18:10:06
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
-import logging
 from datetime import datetime
 
 import pandas as pd
@@ -17,19 +16,13 @@ import pymysql
 import streamlit as st
 
 from utils.database import *
-
-
-CONFIG_FILE = "config.ini"
-
-
-# 配置日志记录
-logging.basicConfig(level=logging.ERROR)
+from utils.logger import logger
 
 st.subheader("课程管理")
 
 
 def load_courses():
-    connection = get_connection(CONFIG_FILE)
+    connection = get_connection()
     if connection:
         try:
             with connection.cursor() as cursor:
@@ -46,13 +39,13 @@ def load_courses():
 
 
 def insert_course(course):
-    connection = get_connection(CONFIG_FILE)
+    connection = get_connection()
     if connection:
         try:
             with connection.cursor() as cursor:
                 sql = "INSERT INTO tb_course (course_name, create_by,updated_by,create_at,updated_at) VALUES (%s, %s, %s,%s,%s)"
                 cursor.execute(sql, (course['course_name'],
-                                     course['create_by'], course['updated_by'], datetime.now(), datetime.now()))
+                                     course['create_by'], st.session_state.username, datetime.now(), datetime.now()))
                 connection.commit()
         except pymysql.MySQLError as db_error:
             handle_database_error(db_error)
@@ -63,13 +56,13 @@ def insert_course(course):
 
 
 def update_coures(course):
-    connection = get_connection(CONFIG_FILE)
+    connection = get_connection()
     if connection:
         try:
             with connection.cursor() as cursor:
                 sql = "UPDATE tb_course SET course_name = %s, create_by = %s, updated_by = %s, updated_at = %s WHERE cou_id = %s"
                 cursor.execute(
-                    sql, (course['course_name'], course['create_by'], course['updated_by'], datetime.now(), course['cou_id']))
+                    sql, (course['course_name'], course['create_by'], st.session_state.username, datetime.now(), course['cou_id']))
                 connection.commit()
         except pymysql.MySQLError as db_error:
             handle_database_error(db_error)
@@ -80,7 +73,7 @@ def update_coures(course):
 
 
 def delete_course(delete_cou_id):
-    connection = get_connection(CONFIG_FILE)
+    connection = get_connection()
     if connection:
         try:
             with connection.cursor() as cursor:
