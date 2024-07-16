@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-16 18:10:06
+ * @LastEditTime : 2024-07-16 18:28:06
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -15,7 +15,7 @@ import pandas as pd
 import pymysql
 import streamlit as st
 
-from utils.database import *
+from utils.database import get_connection, handle_database_error, handle_general_error
 from utils.logger import logger
 
 st.subheader("课程管理")
@@ -47,6 +47,7 @@ def insert_course(course):
                 cursor.execute(sql, (course['course_name'],
                                      course['create_by'], st.session_state.username, datetime.now(), datetime.now()))
                 connection.commit()
+                logger.info("新增课程 %s 成功", course['course_name'])
         except pymysql.MySQLError as db_error:
             handle_database_error(db_error)
         except Exception as general_error:
@@ -64,6 +65,7 @@ def update_coures(course):
                 cursor.execute(
                     sql, (course['course_name'], course['create_by'], st.session_state.username, datetime.now(), course['cou_id']))
                 connection.commit()
+                logger.info("更新课程 %s 成功", course['course_name'])
         except pymysql.MySQLError as db_error:
             handle_database_error(db_error)
         except Exception as general_error:
@@ -72,14 +74,15 @@ def update_coures(course):
             connection.close()
 
 
-def delete_course(delete_cou_id):
+def delete_course(course):
     connection = get_connection()
     if connection:
         try:
             with connection.cursor() as cursor:
                 sql = "DELETE FROM tb_course WHERE cou_id = %s"
-                cursor.execute(sql, (delete_cou_id))
+                cursor.execute(sql, (course['cou_id']))
                 connection.commit()
+                logger.info("删除课程 %s 成功", course['course_name'])
         except pymysql.MySQLError as db_error:
             handle_database_error(db_error)
         except Exception as general_error:
@@ -115,7 +118,7 @@ if st.button("提交"):
             st.success("新增成功")
 
         for index, row in delete_rows.iterrows():
-            delete_course(row['cou_id'])
+            delete_course(row)
             st.success("删除成功")
 
     else:

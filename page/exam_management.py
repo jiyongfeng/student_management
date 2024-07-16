@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-16 18:20:44
+ * @LastEditTime : 2024-07-16 18:34:02
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -15,7 +15,8 @@ import pandas as pd
 import pymysql
 import streamlit as st
 
-from utils.database import *
+from utils.database import (get_connection, handle_database_error,
+                            handle_general_error)
 from utils.logger import logger
 
 st.subheader("考试管理")
@@ -30,6 +31,7 @@ def add_exam(exam):
                 cursor.execute(
                     sql, (exam['exam_name'], st.session_state.username, st.session_state.username, datetime.now(), datetime.now()))
             connection.commit()
+            logger.info("add %s exam success", exam['exam_name'])
         except pymysql.MySQLError as db_error:
             handle_database_error(db_error)
         except Exception as general_error:
@@ -45,9 +47,7 @@ def load_exams():
             sql = "SELECT * FROM tb_exam"
             cursor.execute(sql)
             df = pd.DataFrame(cursor.fetchall())
-
             return df
-
     except pymysql.MySQLError as db_error:
         handle_database_error(db_error)
     except Exception as general_error:
@@ -65,6 +65,7 @@ def insert_exam(exam):
                 cursor.execute(
                     sql, (exam['exam_name'], st.session_state.username, st.session_state.username, datetime.now(), datetime.now()))
                 connection.commit()
+                logger.info("add %s exam success", exam['exam_name'])
         except pymysql.MySQLError as db_error:
             handle_database_error(db_error)
         except Exception as general_error:

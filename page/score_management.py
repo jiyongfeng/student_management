@@ -5,11 +5,10 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-16 18:20:20
+ * @LastEditTime : 2024-07-16 18:32:10
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
-import logging
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -17,7 +16,7 @@ import pymysql
 import seaborn as sns
 import streamlit as st
 
-from utils.database import check_and_insert, get_connection
+from utils.database import get_connection
 
 
 @st.experimental_dialog("添加成绩")

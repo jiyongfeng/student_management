@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-11 22:39:38
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-16 18:09:32
+ * @LastEditTime : 2024-07-16 18:25:10
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -91,9 +91,11 @@ def check_and_insert(connection: object, table_name: str, name: str, value: str)
                 cursor.execute(sql_insert, (value,))
                 connection.commit()
                 st.success(f"成功插入 {value} 到表 {table_name}")
+                logger.debug("成功插入 %s 到表 %s", value, table_name)
             return value
     except pymysql.MySQLError as e:
         st.error(f"操作失败：{str(e)}")
+        logger.error("操作失败：%s", str(e))
 
 
 def handle_database_error(error):

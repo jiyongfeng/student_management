@@ -5,15 +5,13 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-13 10:14:11
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-16 18:10:27
+ * @LastEditTime : 2024-07-16 18:23:42
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
-from utils.logger import logger
-from datetime import datetime
-
 import streamlit as st
 
+from utils.logger import logger
 
 # 定义会话状态、用户名、页面等全局变量
 if 'username' not in st.session_state:
@@ -60,10 +58,11 @@ def login():
             st.session_state.username = username
             st.success("登录成功！")
             # 记录日志
-            logger.info("%s 登录系统", st.session_state.username)
+            logger.info("%s 登录系统成功", st.session_state.username)
             st.rerun()
         else:
             st.error("用户名或密码错误！")
+            logger.error("%s 登录系统失败", st.session_state.username)
 
 
 def loginfo():
