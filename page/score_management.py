@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-16 18:32:10
+ * @LastEditTime : 2024-07-17 00:41:08
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -16,7 +16,8 @@ import pymysql
 import seaborn as sns
 import streamlit as st
 
-from utils.database import get_connection
+from utils.database import get_connection, check_and_insert
+from utils.logger import logger
 
 
 @st.experimental_dialog("添加成绩")
@@ -27,33 +28,47 @@ def add_score():
             sql = "SELECT * FROM tb_student"
             cursor.execute(sql)
             students = cursor.fetchall()
+        students = sorted(students, key=lambda x: x['student_name'])
         student_dict = {student['student_name']: student['stu_id'] for student in students}
-        selected_student = st.selectbox("选择学生", list(student_dict.keys()))
+        selected_student_name = st.selectbox("选择学生", list(student_dict.keys()))
+        selected_student_id = student_dict[selected_student_name]
 
         with connection.cursor() as cursor:
             sql = "SELECT * FROM tb_exam"
             cursor.execute(sql)
             exams = cursor.fetchall()
+        # 获取到的exams按照exam_date升序排序
+        exams = sorted(exams, key=lambda x: x['exam_date'])
         exam_dict = {exam['exam_name']: exam['exam_id'] for exam in exams}
-        selected_exam = st.selectbox("选择考试项目", list(exam_dict.keys()))
+        selected_exam_name = st.selectbox("选择考试项目", list(exam_dict.keys()))
+        selected_exam_id = exam_dict[selected_exam_name]
 
         with connection.cursor() as cursor:
-            sql = "SELECT * FROM tb_course"
-            cursor.execute(sql)
+            # 查找学生该exam尚未登记成绩的课程
+            sql = "SELECT * FROM tb_course WHERE cou_id NOT IN (SELECT course_id from tb_scores where student_id = %s AND exam_id = %s )"
+            cursor.execute(
+                sql, (selected_student_id, selected_exam_id))
             courses = cursor.fetchall()
+
+        courses = sorted(courses, key=lambda x: x['sort'])
         course_dict = {course['course_name']: course['cou_id']
                        for course in courses}
-        selected_course = st.selectbox("选择课程", list(course_dict.keys()))
 
-        score = st.number_input("成绩", min_value=0.0, max_value=100.0)
-        create_by = st.text_input("创建者")
+        selected_course_name = st.selectbox("选择课程", list(course_dict.keys()))
+        selected_course_id = course_dict[selected_course_name]
+
+        score = st.number_input("成绩", min_value=0.0,
+                                max_value=150.0, placeholder="请输入成绩")
+        create_by = st.session_state.username
         if st.button("提交"):
             with connection.cursor() as cursor:
                 sql = "INSERT INTO tb_scores (student_id, exam_id, course_id, score, create_by) VALUES (%s, %s, %s, %s, %s)"
+
                 cursor.execute(
-                    sql, (student_dict[selected_student], exam_dict[selected_exam], course_dict[selected_course], score, create_by))
+                    sql, (selected_student_id, selected_exam_id, selected_course_id, score, create_by))
             connection.commit()
             st.success("成绩登记成功")
+            logger.info("%s 成功登记成绩", selected_student_name)
             st.rerun()
     finally:
         connection.close()
@@ -72,8 +87,10 @@ def view_scores():
                 # 查询所有项目和学科
                 cursor.execute("SELECT * FROM tb_exam order by exam_name asc")
                 exams = cursor.fetchall()
+                exams = sorted(exams, key=lambda x: x['exam_date'])
                 cursor.execute("SELECT * FROM tb_course")
                 courses = cursor.fetchall()
+                courses = sorted(courses, key=lambda x: x['sort'])
         finally:
             connection.close()
 
@@ -90,27 +107,27 @@ def view_scores():
             with connection.cursor() as cursor:
                 if selected_exam == "所有项目" and selected_course == "所有学科":
                     # 显示所有成绩
-                    cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, c.course_name, s.score FROM tb_scores s "
+                    cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
                                    "INNER JOIN tb_student st ON s.student_id = st.stu_id "
                                    "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
                                    "INNER JOIN tb_course c ON s.course_id = c.cou_id")
                 elif selected_exam == "所有项目" and selected_course != "所有学科":
                     # 根据学科筛选成绩
-                    cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, c.course_name, s.score FROM tb_scores s "
+                    cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
                                    "INNER JOIN tb_student st ON s.student_id = st.stu_id "
                                    "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
                                    "INNER JOIN tb_course c ON s.course_id = c.cou_id "
                                    "WHERE c.course_name = %s", (selected_course,))
                 elif selected_exam != "所有项目" and selected_course == "所有学科":
                     # 根据项目筛选成绩
-                    cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, c.course_name, s.score FROM tb_scores s "
+                    cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
                                    "INNER JOIN tb_student st ON s.student_id = st.stu_id "
                                    "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
                                    "INNER JOIN tb_course c ON s.course_id = c.cou_id "
                                    "WHERE e.exam_name = %s", (selected_exam,))
                 else:
                     # 根据项目和学科筛选成绩
-                    cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, c.course_name, s.score FROM tb_scores s "
+                    cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
                                    "INNER JOIN tb_student st ON s.student_id = st.stu_id "
                                    "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
                                    "INNER JOIN tb_course c ON s.course_id = c.cou_id "
@@ -124,21 +141,16 @@ def view_scores():
     if scores:
         df_scores = pd.DataFrame(scores)
         # 对 exam_name 列按名称排序
-        df_scores_sorted = df_scores.sort_values(by='exam_name')
-        st.dataframe(df_scores_sorted, use_container_width=True)
+
+        df_scores_sorted = df_scores.sort_values(
+            by=['exam_date', 'sort'])
+        st.dataframe(df_scores_sorted, use_container_width=True, column_order=[
+                     'student_name', 'exam_name', 'exam_date', 'course_name', 'score'], hide_index=True)
 
         if selected_course != '所有学科' and selected_exam == '所有项目':
-            # 显示直方图
-            st.subheader(f"{selected_course}学科的成绩分布")
-            fig, ax = plt.subplots(figsize=(10, 6))
-            sns.lineplot(ax=ax, data=df_scores_sorted,
-                         x='exam_name', y='score', marker='o')
-            ax.set_xlabel('项目', fontproperties='SimHei')
-            ax.set_ylabel('成绩', fontproperties='SimHei')
-            plt.title(f"{selected_course}学科的成绩分布",
-                      fontproperties='SimHei')
-            plt.xticks(rotation=45)
-            st.pyplot(fig)
+            st.line_chart(df_scores, x='exam_name',
+                          y='score', use_container_width=True, x_label='考试名称', y_label='成绩')
+
     else:
         st.write("暂无符合条件的成绩记录")
 
@@ -150,7 +162,7 @@ def edit_score():
     try:
         with connection.cursor() as cursor:
             sql = """
-            SELECT tb_scores.score_id, tb_student.student_name, tb_exam.exam_name, tb_course.course_name, tb_scores.score
+            SELECT tb_scores.score_id, tb_student.student_name, tb_exam.exam_name, tb_exam.exam_date,tb_course.course_name, tb_course.sort,tb_scores.score
             FROM tb_scores
             JOIN tb_student ON tb_scores.student_id = tb_student.stu_id
             JOIN tb_exam ON tb_scores.exam_id = tb_exam.exam_id
@@ -158,11 +170,19 @@ def edit_score():
             """
             cursor.execute(sql)
             scores = cursor.fetchall()
-        score_dict = {f"{score['student_name']} - {score['exam_name']} - {
-            score['course_name']}": score['score_id'] for score in scores}
-        selected_score = st.selectbox("选择成绩记录", list(score_dict.keys()))
-        new_score = st.number_input("新成绩", min_value=0.0, max_value=100.0)
-        updated_by = st.text_input("更新者")
+        df_scores = pd.DataFrame(scores)
+        df_scores_sorted = df_scores.sort_values(
+            by=['exam_date', 'sort'])
+
+        # 使用df_scores_sorted作为参数创建下拉列表
+        score_dict = {row['student_name'] + '-' + row['exam_name'] + '-' + row['course_name'] + '-' + str(row['score']): row['score_id']
+                      for index, row in df_scores_sorted.iterrows()}
+
+        selected_score = st.selectbox("选择成绩记录", score_dict.keys())
+
+        new_score = st.number_input(
+            "新成绩", min_value=0.0, max_value=100.0, placeholder=f'{selected_score.split('-')[-1]}', value=None)
+        updated_by = st.session_state.username
         if st.button("提交"):
             with connection.cursor() as cursor:
                 sql = "UPDATE tb_scores SET score=%s, updated_by=%s WHERE score_id=%s"
@@ -170,6 +190,7 @@ def edit_score():
                                score_dict[selected_score]))
             connection.commit()
             st.success("成绩更新成功")
+            st.rerun()
     finally:
         connection.close()
 

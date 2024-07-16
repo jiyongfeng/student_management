@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-16 18:34:02
+ * @LastEditTime : 2024-07-17 00:45:28
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -20,24 +20,6 @@ from utils.database import (get_connection, handle_database_error,
 from utils.logger import logger
 
 st.subheader("考试管理")
-
-
-def add_exam(exam):
-    connection = get_connection()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                sql = "INSERT INTO tb_exam (exam_name, create_by,updated_by, create_at,updated_at) VALUES (%s, %s, %s,%s,%s)"
-                cursor.execute(
-                    sql, (exam['exam_name'], st.session_state.username, st.session_state.username, datetime.now(), datetime.now()))
-            connection.commit()
-            logger.info("add %s exam success", exam['exam_name'])
-        except pymysql.MySQLError as db_error:
-            handle_database_error(db_error)
-        except Exception as general_error:
-            handle_general_error(general_error)
-        finally:
-            connection.close()
 
 
 def load_exams():
@@ -61,9 +43,9 @@ def insert_exam(exam):
     if connection:
         try:
             with connection.cursor() as cursor:
-                sql = "INSERT INTO tb_exam (exam_name, create_by,updated_by,create_at,updated_at) VALUES (%s, %s, %s,%s,%s)"
+                sql = "INSERT INTO tb_exam (exam_name, exam_date,create_by,updated_by,create_at,updated_at) VALUES (%s, %s, %s, %s,%s,%s)"
                 cursor.execute(
-                    sql, (exam['exam_name'], st.session_state.username, st.session_state.username, datetime.now(), datetime.now()))
+                    sql, (exam['exam_name'], exam['exam_date'], st.session_state.username, st.session_state.username, datetime.now(), datetime.now()))
                 connection.commit()
                 logger.info("add %s exam success", exam['exam_name'])
         except pymysql.MySQLError as db_error:
@@ -78,8 +60,8 @@ def update_exam(exam):
     connection = get_connection()
     try:
         with connection.cursor() as cursor:
-            sql = "UPDATE tb_exam SET exam_name=%s, create_by = %s, updated_by = %s, updated_at = %s WHERE exam_id = %s"
-            cursor.execute(sql, (exam['exam_name'], exam['create_by'],
+            sql = "UPDATE tb_exam SET exam_name=%s, exam_date=%s, create_by = %s, updated_by = %s, updated_at = %s WHERE exam_id = %s"
+            cursor.execute(sql, (exam['exam_name'], exam['exam_date'], exam['create_by'],
                                  st.session_state.username, datetime.now(), exam['exam_id']))
         connection.commit()
     except pymysql.MySQLError as db_error:
@@ -112,7 +94,7 @@ original_df = df.copy()
 edited_df = df.copy()
 
 edited_df = st.data_editor(edited_df, column_order=[
-                           "exam_name", "create_by", 'create_at', "updated_by", 'updated_at'], use_container_width=True, hide_index=True, num_rows="dynamic")
+                           "exam_name", 'exam_date', "create_by", 'create_at', "updated_by", 'updated_at'], use_container_width=True, hide_index=True, num_rows="dynamic")
 
 col0, col1, col2, col3 = st.columns([1, 1, 1, 1], gap='small')
 with col1:

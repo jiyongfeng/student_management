@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-16 18:28:06
+ * @LastEditTime : 2024-07-17 00:50:41
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -43,8 +43,8 @@ def insert_course(course):
     if connection:
         try:
             with connection.cursor() as cursor:
-                sql = "INSERT INTO tb_course (course_name, create_by,updated_by,create_at,updated_at) VALUES (%s, %s, %s,%s,%s)"
-                cursor.execute(sql, (course['course_name'],
+                sql = "INSERT INTO tb_course (course_name, sort, create_by,updated_by,create_at,updated_at) VALUES (%s, %s, %s,%s,%s)"
+                cursor.execute(sql, (course['course_name'], course['sort'],
                                      course['create_by'], st.session_state.username, datetime.now(), datetime.now()))
                 connection.commit()
                 logger.info("新增课程 %s 成功", course['course_name'])
@@ -61,9 +61,9 @@ def update_coures(course):
     if connection:
         try:
             with connection.cursor() as cursor:
-                sql = "UPDATE tb_course SET course_name = %s, create_by = %s, updated_by = %s, updated_at = %s WHERE cou_id = %s"
+                sql = "UPDATE tb_course SET course_name = %s,sort=%s, create_by = %s, updated_by = %s, updated_at = %s WHERE cou_id = %s"
                 cursor.execute(
-                    sql, (course['course_name'], course['create_by'], st.session_state.username, datetime.now(), course['cou_id']))
+                    sql, (course['course_name'], course['sort'], course['create_by'], st.session_state.username, datetime.now(), course['cou_id']))
                 connection.commit()
                 logger.info("更新课程 %s 成功", course['course_name'])
         except pymysql.MySQLError as db_error:
@@ -95,7 +95,7 @@ df_courses = load_courses()
 
 display_df = df_courses.drop(columns=['create_at', 'updated_at'])
 edited_df = st.data_editor(df_courses, column_order=[
-                           "course_name", "create_by", 'create_at', "updated_by", 'updated_at'], use_container_width=True, hide_index=True, num_rows="dynamic")
+                           "course_name", 'sort', "create_by", 'create_at', "updated_by", 'updated_at'], use_container_width=True, hide_index=True, num_rows="dynamic")
 
 if st.button("提交"):
 
