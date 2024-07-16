@@ -5,116 +5,35 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-14 15:52:17
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-14 17:00:05
+ * @LastEditTime : 2024-07-16 09:36:44
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
 import streamlit as st
-
-# 定义会话状态以存储用户名和页面状态
-if 'username' not in st.session_state:
-    st.session_state['username'] = ''
-if 'page' not in st.session_state:
-    st.session_state['page'] = 'main_page'
-if 'logout_confirm' not in st.session_state:
-    st.session_state['logout_confirm'] = False
-
-st.write(st.secrets['database']['user'])
-st.write(st.secrets["OpenAI_key"])
-# 定义主页
+import time
 
 
-placeholder = st.empty()
-
-# Replace the placeholder with some text:
-placeholder.text("Hello")
-
-# Replace the text with a chart:
-placeholder.line_chart({"data": [1, 5, 2, 6]})
-
-with st.popover("Open popover"):
-    st.markdown("Hello World 👋")
-    name = st.text_input("What's your name?")
-
-st.write("Your name:", name)
+def page1():
+    st.write(st.session_state.foo)
 
 
-@st.experimental_dialog("Cast your vote")
-def vote(item):
-    st.write(f"Why is {item} your favorite?")
-    reason = st.text_input("Because...")
-    if st.button("Submit"):
-        st.session_state.vote = {"item": item, "reason": reason}
-        st.rerun()
+def page2():
+    st.write(st.session_state.bar)
 
 
-if "vote" not in st.session_state:
-    st.write("Vote for your favorite")
-    if st.button("A"):
-        vote("A")
-    if st.button("B"):
-        vote("B")
-else:
-    f"You voted for {st.session_state.vote['item']} because {
-        st.session_state.vote['reason']}"
+# Widgets shared by all the pages
+st.sidebar.selectbox("Foo", ["A", "B", "C"], key="foo")
+st.sidebar.checkbox("Bar", key="bar")
+st.sidebar.button("Clear", key="clear")
 
+for i in st.session_state.keys():
+    st.write(i)
 
-def main_page():
-    st.title("Main Page")
+with st.spinner(text="Loading..."):
+    for _ in range(10):
+        time.sleep(0.5)
+    st.write("World")
 
-    st.write("Please enter your username to continue:")
-    username = st.text_input("Username", value=st.session_state['username'])
-
-    if username:
-        st.session_state['username'] = username
-        st.write(f"Hello, {username}!")
-        st.rerun()
-
-    if st.button("Go to Other Page"):
-        st.session_state['page'] = 'other_page'
-        st.query_params["page"] = 'other_page'
-        st.rerun()
-
-    if st.button("Logout"):
-        st.session_state['logout_confirm'] = True
-
-# 定义其他页面
-
-
-def other_page():
-    st.title("Other Page")
-
-    if 'username' in st.session_state and st.session_state['username']:
-        st.write(f"This page was updated by: {st.session_state['username']}")
-    else:
-        st.write("No username provided.")
-    if st.button("Go Back to Main Page"):
-        st.session_state['page'] = 'main_page'
-        st.query_params["page"] = 'main_page'
-        st.rerun()
-
-    if st.button("Logout"):
-        st.session_state['logout_confirm'] = True
-
-# 定义注销确认对话框
-
-
-def logout_confirm():
-    st.write("Are you sure you want to logout?")
-    if st.button("Yes, logout"):
-        st.session_state['username'] = ''
-        st.session_state['page'] = 'main_page'
-        st.session_state['logout_confirm'] = False
-        st.query_params["page"] = 'main_page'
-        st.rerun()
-    if st.button("No, go back"):
-        st.session_state['logout_confirm'] = False
-
-
-# 页面导航
-if st.session_state['logout_confirm']:
-    logout_confirm()
-elif st.session_state['page'] == 'main_page':
-    main_page()
-else:
-    other_page()
+pg = st.navigation(
+    [st.Page(page1, title='hello', icon=':material/login:'), st.Page(page2)])
+pg.run()
