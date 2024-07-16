@@ -1,3 +1,5 @@
 .streamlit
 .vscode
 log/*
+*/__pycache__
+.pytest_cache/*

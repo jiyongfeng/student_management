@@ -5,20 +5,18 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-16 17:16:17
+ * @LastEditTime : 2024-07-16 18:20:44
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
-from utils.logger import logger
 from datetime import datetime
 
 import pandas as pd
 import pymysql
-
 import streamlit as st
 
 from utils.database import *
-
+from utils.logger import logger
 
 st.subheader("考试管理")
 

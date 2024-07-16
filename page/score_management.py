@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-15 22:57:49
+ * @LastEditTime : 2024-07-16 18:20:20
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -14,14 +14,10 @@ import logging
 import matplotlib.pyplot as plt
 import pandas as pd
 import pymysql
-import streamlit as st
 import seaborn as sns
-from utils.database import get_connection, check_and_insert
+import streamlit as st
 
-# 配置日志记录
-logging.basicConfig(level=logging.DEBUG)
-
-= "config.ini"
+from utils.database import check_and_insert, get_connection
 
 
 @st.experimental_dialog("添加成绩")
