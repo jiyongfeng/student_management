@@ -5,15 +5,13 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-17 17:11:23
+ * @LastEditTime : 2024-07-17 20:08:04
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
 
-import matplotlib.pyplot as plt
 import pandas as pd
 import pymysql
-import seaborn as sns
 import streamlit as st
 
 from utils.database import get_connection, check_and_insert
@@ -34,17 +32,16 @@ def add_score():
         selected_student_name = st.selectbox("选择学生", list(student_dict.keys()))
         selected_student_id = student_dict[selected_student_name]
 
-        sql = "SELECT * FROM tb_exam"
+        sql = "SELECT * FROM tb_exam order by exam_date asc"
         cursor.execute(sql)
         exams = cursor.fetchall()
         # 获取到的exams按照exam_date升序排序
-        exams = sorted(exams, key=lambda x: x['exam_date'])
         exam_dict = {exam['exam_name']: exam['exam_id'] for exam in exams}
         selected_exam_name = st.selectbox("选择考试项目", list(exam_dict.keys()))
         selected_exam_id = exam_dict[selected_exam_name]
 
         # 查找学生该exam尚未登记成绩的课程
-        sql = "SELECT * FROM tb_course WHERE cou_id NOT IN (SELECT course_id from tb_scores where student_id = %s AND exam_id = %s )"
+        sql = "SELECT * FROM tb_course WHERE cou_id NOT IN (SELECT course_id from tb_scores where student_id = %s AND exam_id = %s ) order by sort asc"
         cursor.execute(
             sql, (selected_student_id, selected_exam_id))
         courses = cursor.fetchall()
@@ -52,10 +49,7 @@ def add_score():
         # 查询结果为空
         if courses == ():
             st.write(f"该学生[{selected_exam_name}]的成绩已全部登记，请选择其他课程！")
-
         else:
-
-            courses = sorted(courses, key=lambda x: x['sort'])
             course_dict = {course['course_name']: course['cou_id']
                            for course in courses}
 
@@ -67,11 +61,9 @@ def add_score():
                                     max_value=150.0, placeholder="请输入成绩")
             create_by = st.session_state.username
             if st.button("提交"):
-                with connection.cursor() as cursor:
-                    sql = "INSERT INTO tb_scores (student_id, exam_id, course_id, score, create_by) VALUES (%s, %s, %s, %s, %s)"
-
-                    cursor.execute(
-                        sql, (selected_student_id, selected_exam_id, selected_course_id, score, create_by))
+                sql = "INSERT INTO tb_scores (student_id, exam_id, course_id, score, create_by) VALUES (%s, %s, %s, %s, %s)"
+                cursor.execute(
+                    sql, (selected_student_id, selected_exam_id, selected_course_id, score, create_by))
                 connection.commit()
                 st.success("成绩登记成功")
                 logger.info("%s 成功登记成绩", selected_student_name)
@@ -87,59 +79,50 @@ def view_scores():
 
     # 获取所有项目和学科信息
     connection = get_connection()
+    cursor = connection.cursor()
     if connection:
         try:
-            with connection.cursor() as cursor:
-                # 查询所有项目和学科
-                cursor.execute("SELECT * FROM tb_exam order by exam_name asc")
-                exams = cursor.fetchall()
-                exams = sorted(exams, key=lambda x: x['exam_date'])
-                cursor.execute("SELECT * FROM tb_course")
-                courses = cursor.fetchall()
-                courses = sorted(courses, key=lambda x: x['sort'])
-        finally:
-            connection.close()
+            # 查询所有项目和学科
+            cursor.execute("SELECT * FROM tb_exam order by exam_date asc")
+            exams = cursor.fetchall()
+            cursor.execute("SELECT * FROM tb_course order by sort asc")
+            courses = cursor.fetchall()
 
-    # 显示筛选器：选择项目或学科
-    selected_exam = st.selectbox(
-        "选择项目", ["所有项目"] + [exam['exam_name'] for exam in exams])
-    selected_course = st.selectbox(
-        "选择学科", ["所有学科"] + [course['course_name'] for course in courses])
+            # 显示筛选器：选择项目或学科
+            selected_exam = st.selectbox(
+                "选择项目", ["所有项目"] + [exam['exam_name'] for exam in exams])
+            selected_course = st.selectbox(
+                "选择学科", ["所有学科"] + [course['course_name'] for course in courses])
 
-    # 根据选择的项目和学科进行筛选
-    connection = get_connection()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                if selected_exam == "所有项目" and selected_course == "所有学科":
-                    # 显示所有成绩
-                    cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
-                                   "INNER JOIN tb_student st ON s.student_id = st.stu_id "
-                                   "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
-                                   "INNER JOIN tb_course c ON s.course_id = c.cou_id")
-                elif selected_exam == "所有项目" and selected_course != "所有学科":
-                    # 根据学科筛选成绩
-                    cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
-                                   "INNER JOIN tb_student st ON s.student_id = st.stu_id "
-                                   "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
-                                   "INNER JOIN tb_course c ON s.course_id = c.cou_id "
-                                   "WHERE c.course_name = %s", (selected_course,))
-                elif selected_exam != "所有项目" and selected_course == "所有学科":
-                    # 根据项目筛选成绩
-                    cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
-                                   "INNER JOIN tb_student st ON s.student_id = st.stu_id "
-                                   "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
-                                   "INNER JOIN tb_course c ON s.course_id = c.cou_id "
-                                   "WHERE e.exam_name = %s", (selected_exam,))
-                else:
-                    # 根据项目和学科筛选成绩
-                    cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
-                                   "INNER JOIN tb_student st ON s.student_id = st.stu_id "
-                                   "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
-                                   "INNER JOIN tb_course c ON s.course_id = c.cou_id "
-                                   "WHERE e.exam_name = %s AND c.course_name = %s", (selected_exam, selected_course))
+            if selected_exam == "所有项目" and selected_course == "所有学科":
+                # 显示所有成绩
+                cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
+                               "INNER JOIN tb_student st ON s.student_id = st.stu_id "
+                               "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
+                               "INNER JOIN tb_course c ON s.course_id = c.cou_id")
+            elif selected_exam == "所有项目" and selected_course != "所有学科":
+                # 根据学科筛选成绩
+                cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
+                               "INNER JOIN tb_student st ON s.student_id = st.stu_id "
+                               "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
+                               "INNER JOIN tb_course c ON s.course_id = c.cou_id "
+                               "WHERE c.course_name = %s", (selected_course,))
+            elif selected_exam != "所有项目" and selected_course == "所有学科":
+                # 根据项目筛选成绩
+                cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
+                               "INNER JOIN tb_student st ON s.student_id = st.stu_id "
+                               "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
+                               "INNER JOIN tb_course c ON s.course_id = c.cou_id "
+                               "WHERE e.exam_name = %s", (selected_exam,))
+            else:
+                # 根据项目和学科筛选成绩
+                cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
+                               "INNER JOIN tb_student st ON s.student_id = st.stu_id "
+                               "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
+                               "INNER JOIN tb_course c ON s.course_id = c.cou_id "
+                               "WHERE e.exam_name = %s AND c.course_name = %s", (selected_exam, selected_course))
 
-                scores = cursor.fetchall()
+            scores = cursor.fetchall()
         finally:
             connection.close()
 
