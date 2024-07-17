@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-17 00:50:41
+ * @LastEditTime : 2024-07-17 10:08:26
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -28,7 +28,7 @@ def load_courses():
             with connection.cursor() as cursor:
                 sql = "SELECT * FROM tb_course"
                 cursor.execute(sql)
-                courses = pd.DataFrame(cursor.fetchall())
+                courses = cursor.fetchall()
                 return courses
         except pymysql.MySQLError as db_error:
             handle_database_error(db_error)
@@ -91,8 +91,9 @@ def delete_course(course):
             connection.close()
 
 
-df_courses = load_courses()
-
+courses = load_courses()
+courses = sorted(courses, key=lambda x: x['sort'])
+df_courses = pd.DataFrame(courses)
 display_df = df_courses.drop(columns=['create_at', 'updated_at'])
 edited_df = st.data_editor(df_courses, column_order=[
                            "course_name", 'sort', "create_by", 'create_at', "updated_by", 'updated_at'], use_container_width=True, hide_index=True, num_rows="dynamic")
