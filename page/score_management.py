@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-17 00:41:08
+ * @LastEditTime : 2024-07-17 17:11:23
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -23,53 +23,59 @@ from utils.logger import logger
 @st.experimental_dialog("添加成绩")
 def add_score():
     connection = get_connection()
+    cursor = connection.cursor()
     try:
-        with connection.cursor() as cursor:
-            sql = "SELECT * FROM tb_student"
-            cursor.execute(sql)
-            students = cursor.fetchall()
+
+        sql = "SELECT * FROM tb_student"
+        cursor.execute(sql)
+        students = cursor.fetchall()
         students = sorted(students, key=lambda x: x['student_name'])
-        student_dict = {student['student_name']: student['stu_id'] for student in students}
+        student_dict = {student['student_name']                        : student['stu_id'] for student in students}
         selected_student_name = st.selectbox("选择学生", list(student_dict.keys()))
         selected_student_id = student_dict[selected_student_name]
 
-        with connection.cursor() as cursor:
-            sql = "SELECT * FROM tb_exam"
-            cursor.execute(sql)
-            exams = cursor.fetchall()
+        sql = "SELECT * FROM tb_exam"
+        cursor.execute(sql)
+        exams = cursor.fetchall()
         # 获取到的exams按照exam_date升序排序
         exams = sorted(exams, key=lambda x: x['exam_date'])
         exam_dict = {exam['exam_name']: exam['exam_id'] for exam in exams}
         selected_exam_name = st.selectbox("选择考试项目", list(exam_dict.keys()))
         selected_exam_id = exam_dict[selected_exam_name]
 
-        with connection.cursor() as cursor:
-            # 查找学生该exam尚未登记成绩的课程
-            sql = "SELECT * FROM tb_course WHERE cou_id NOT IN (SELECT course_id from tb_scores where student_id = %s AND exam_id = %s )"
-            cursor.execute(
-                sql, (selected_student_id, selected_exam_id))
-            courses = cursor.fetchall()
+        # 查找学生该exam尚未登记成绩的课程
+        sql = "SELECT * FROM tb_course WHERE cou_id NOT IN (SELECT course_id from tb_scores where student_id = %s AND exam_id = %s )"
+        cursor.execute(
+            sql, (selected_student_id, selected_exam_id))
+        courses = cursor.fetchall()
 
-        courses = sorted(courses, key=lambda x: x['sort'])
-        course_dict = {course['course_name']: course['cou_id']
-                       for course in courses}
+        # 查询结果为空
+        if courses == ():
+            st.write(f"该学生[{selected_exam_name}]的成绩已全部登记，请选择其他课程！")
 
-        selected_course_name = st.selectbox("选择课程", list(course_dict.keys()))
-        selected_course_id = course_dict[selected_course_name]
+        else:
 
-        score = st.number_input("成绩", min_value=0.0,
-                                max_value=150.0, placeholder="请输入成绩")
-        create_by = st.session_state.username
-        if st.button("提交"):
-            with connection.cursor() as cursor:
-                sql = "INSERT INTO tb_scores (student_id, exam_id, course_id, score, create_by) VALUES (%s, %s, %s, %s, %s)"
+            courses = sorted(courses, key=lambda x: x['sort'])
+            course_dict = {course['course_name']: course['cou_id']
+                           for course in courses}
 
-                cursor.execute(
-                    sql, (selected_student_id, selected_exam_id, selected_course_id, score, create_by))
-            connection.commit()
-            st.success("成绩登记成功")
-            logger.info("%s 成功登记成绩", selected_student_name)
-            st.rerun()
+            selected_course_name = st.selectbox(
+                "选择课程", list(course_dict.keys()))
+            selected_course_id = course_dict[selected_course_name]
+
+            score = st.number_input("成绩", min_value=0.0,
+                                    max_value=150.0, placeholder="请输入成绩")
+            create_by = st.session_state.username
+            if st.button("提交"):
+                with connection.cursor() as cursor:
+                    sql = "INSERT INTO tb_scores (student_id, exam_id, course_id, score, create_by) VALUES (%s, %s, %s, %s, %s)"
+
+                    cursor.execute(
+                        sql, (selected_student_id, selected_exam_id, selected_course_id, score, create_by))
+                connection.commit()
+                st.success("成绩登记成功")
+                logger.info("%s 成功登记成绩", selected_student_name)
+                st.rerun()
     finally:
         connection.close()
 
