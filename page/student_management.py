@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-17 20:26:34
+ * @LastEditTime : 2024-07-17 20:28:20
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -115,20 +115,16 @@ if st.button("提交"):
             if not row.equals(original_row.drop(columns=['created_at', 'updated_at'])):
                 update_student(row)
                 st.success("更新成功")
-                logger.info(f"更新{row['student_name']}信息成功。")
-
         delete_rows = df_students[~df_students['stu_id'].isin(
             edited_df['stu_id'])]
 
         for index, row in new_rows.iterrows():
             insert_student(row)
             st.success("新增成功")
-            logger.info(f"新增{row['student_name']}信息成功。")
 
         for index, row in delete_rows.iterrows():
             delete_student(row)
             st.success("删除成功")
-            logger.info(f"删除{row['student_name']}信息成功。")
 
     else:
         st.warning("没有更改")
