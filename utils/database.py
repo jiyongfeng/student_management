@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-11 22:39:38
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-16 18:25:10
+ * @LastEditTime : 2024-07-18 10:34:24
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -64,6 +64,25 @@ def get_connection():
     except pymysql.MySQLError as e:
         st.error(f"数据库连接失败: {str(e)}")
         logger.error("数据库连接失败: %s", str(e))
+
+
+def execute_sql(connection, sql, params=None, commit=False):
+    """
+    执行SQL语句的通用函数，用于减少重复代码
+    """
+    try:
+        with connection.cursor() as cursor:
+            if params:
+                cursor.execute(sql, params)
+            else:
+                cursor.execute(sql)
+            if commit:
+                connection.commit()
+            return cursor.fetchall()
+    except pymysql.MySQLError as db_error:
+        handle_database_error(db_error)
+    except Exception as general_error:
+        handle_general_error(general_error)
 
 
 def check_and_insert(connection: object, table_name: str, name: str, value: str):
