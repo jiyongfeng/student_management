@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-17 00:45:28
+ * @LastEditTime : 2024-07-18 14:59:53
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -15,80 +15,99 @@ import pandas as pd
 import pymysql
 import streamlit as st
 
-from utils.database import (get_connection, handle_database_error,
+from utils.database import (execute_sql, get_connection, handle_database_error,
                             handle_general_error)
 from utils.logger import logger
 
 st.subheader("考试管理")
 
 
+@st.cache_data
 def load_exams():
+    """加载考试项目
+
+    Returns:
+        tuple: 考试项目信息
+    """
     connection = get_connection()
     try:
-        with connection.cursor() as cursor:
-            sql = "SELECT * FROM tb_exam"
-            cursor.execute(sql)
-            df = pd.DataFrame(cursor.fetchall())
-            return df
-    except pymysql.MySQLError as db_error:
-        handle_database_error(db_error)
-    except Exception as general_error:
-        handle_general_error(general_error)
+        sql = "SELECT * FROM tb_exam"
+        exams = execute_sql(connection, sql)
+        return exams
     finally:
         connection.close()
 
 
-def insert_exam(exam):
+def insert_exam(exam: dict):
+    """
+    插入考试信息到数据库。
+
+    :param exam: 包含考试信息的字典，键值对为考试名和考试日期。
+    """
+
+    # 获取数据库连接
     connection = get_connection()
+
+    # 检查数据库连接是否成功
     if connection:
         try:
-            with connection.cursor() as cursor:
-                sql = "INSERT INTO tb_exam (exam_name, exam_date,create_by,updated_by,create_at,updated_at) VALUES (%s, %s, %s, %s,%s,%s)"
-                cursor.execute(
-                    sql, (exam['exam_name'], exam['exam_date'], st.session_state.username, st.session_state.username, datetime.now(), datetime.now()))
-                connection.commit()
-                logger.info("add %s exam success", exam['exam_name'])
-        except pymysql.MySQLError as db_error:
-            handle_database_error(db_error)
-        except Exception as general_error:
-            handle_general_error(general_error)
+            # 使用with语句确保数据库游标正确关闭
+            sql = "INSERT INTO tb_exam (exam_name, exam_date,create_by,updated_by,create_at,updated_at) VALUES (%s, %s, %s, %s,%s,%s)"
+            # 执行SQL语句，插入考试信息
+            execute_sql(connection, sql, (
+                exam['exam_name'],
+                exam['exam_date'],
+                st.session_state.username,
+                st.session_state.username,
+                datetime.now(),
+                datetime.now()
+            ), commit=True)
+            # 提交事务，确保数据插入数据库
+            logger.info("add %s exam success", exam['exam_name'])
         finally:
+            # 关闭数据库连接
             connection.close()
 
 
-def update_exam(exam):
+def update_exam(exam: dict):
+    """update exams
+
+    Args:
+        exam (dict): exam info
+    """
     connection = get_connection()
     try:
-        with connection.cursor() as cursor:
-            sql = "UPDATE tb_exam SET exam_name=%s, exam_date=%s, create_by = %s, updated_by = %s, updated_at = %s WHERE exam_id = %s"
-            cursor.execute(sql, (exam['exam_name'], exam['exam_date'], exam['create_by'],
-                                 st.session_state.username, datetime.now(), exam['exam_id']))
-        connection.commit()
-    except pymysql.MySQLError as db_error:
-        handle_database_error(db_error)
-    except Exception as general_error:
-        handle_general_error(general_error)
+        sql = "UPDATE tb_exam SET exam_name=%s, exam_date=%s, create_by = %s, updated_by = %s, updated_at = %s WHERE exam_id = %s"
+        execute_sql(connection, sql, (
+            exam['exam_name'],
+            exam['exam_date'],
+            exam['create_by'],
+            st.session_state.username,
+            datetime.now(),
+            exam['exam_id']
+        ), commit=True)
+        logger.info("update %s exam success", exam['exam_name'])
     finally:
         connection.close()
 
 
-def delete_exam(delete_exam_id):
+def delete_exam(exam: dict):
+    """delete exam
+
+    Args:
+        exam (dict): exam info
+    """
     connection = get_connection()
     if connection:
         try:
-            with connection.cursor() as cursor:
-                sql = "DELETE FROM tb_exam WHERE exam_id = %s"
-                cursor.execute(sql, (delete_exam_id))
-                connection.commit()
-        except pymysql.MySQLError as db_error:
-            handle_database_error(db_error)
-        except Exception as general_error:
-            handle_general_error(general_error)
+            sql = "DELETE FROM tb_exam WHERE exam_id = %s"
+            execute_sql(connection, sql, (exam['exam_id'],), commit=True)
+            logger.info("delete %s exam success", exam['exam_name'])
         finally:
             connection.close()
 
 
-df = load_exams()
+df = pd.DataFrame(load_exams())
 
 original_df = df.copy()
 edited_df = df.copy()
@@ -121,7 +140,7 @@ with col1:
                 st.success("新增成功")
 
             for index, row in delete_rows.iterrows():
-                delete_exam(row['exam_id'])
+                delete_exam(row)
                 st.success("删除成功")
         else:
             st.warning("没有更改")

@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-17 20:28:20
+ * @LastEditTime : 2024-07-18 15:02:42
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -22,6 +22,7 @@ from utils.logger import logger
 st.subheader("学生管理")
 
 
+@st.cache_data
 def load_students():
     connection = get_connection()
     try:

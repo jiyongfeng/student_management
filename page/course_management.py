@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-18 14:43:37
+ * @LastEditTime : 2024-07-18 14:46:56
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -15,10 +15,12 @@ import pandas as pd
 import pymysql
 import streamlit as st
 
-from utils.database import get_connection, handle_database_error, handle_general_error, execute_sql
+from utils.database import (execute_sql, get_connection, handle_database_error,
+                            handle_general_error)
 from utils.logger import logger
 
 
+@st.cache_data
 def load_courses():
     """加载课程
 
@@ -170,12 +172,8 @@ edited_df = st.data_editor(
     disabled=["create_by", 'create_at', "updated_by", 'updated_at']
 )
 
-# 找出某两列发生变化的集合
-
-
 if st.button("提交"):
     if not df_courses.equals(edited_df):
         process_course_actions(df_courses, edited_df)
-
     else:
         st.warning("没有更改")
