@@ -5,11 +5,12 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-16 17:39:14
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-16 23:59:31
+ * @LastEditTime : 2024-07-21 21:19:31
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
 import logging
+import os
 from datetime import datetime
 import streamlit as st
 
@@ -17,6 +18,11 @@ if "logPath" not in st.session_state:
     # 日志文件路径,以log+当前时间戳
     st.session_state.logPath = "log/log_" + \
         datetime.now().strftime("%Y%m%d%H%M%S") + ".log"
+    # 判断日志文件是否存在,不存在则创建
+    if not os.path.exists(st.session_state.logPath):
+        os.makedirs(os.path.dirname(st.session_state.logPath))
+        with open(st.session_state.logPath, "w") as f:
+            f.write("")
 
 # 配置全局logging
 logging.basicConfig(

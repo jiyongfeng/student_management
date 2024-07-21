@@ -5,11 +5,12 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-11 22:39:38
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-18 10:34:24
+ * @LastEditTime : 2024-07-21 16:17:51
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
 import configparser
+import bcrypt
 
 import pymysql
 import streamlit as st
@@ -141,3 +142,18 @@ def show_error_message(message):
 def log_error(prefix, error):
     # 记录错误日志，包括错误前缀和错误详细信息
     logger.error("%s %s", prefix, str(error))
+
+
+# 加密密码
+
+
+def hash_password(password):
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed
+
+# 验证密码
+
+
+def check_password(hashed_password, user_password):
+    return bcrypt.checkpw(user_password.encode('utf-8'), hashed_password)
