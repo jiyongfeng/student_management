@@ -1,10 +1,4 @@
-streamlit-extras
-pandas
-numpy == 1.26.4
-matplotlib
-mysql-connector-python
-pymysql
-pyparsing
-datetime
-
-logging
+pandas==2.2.2
+PyMySQL==1.1.1
+python_bcrypt==0.3.2
+streamlit==1.36.0
