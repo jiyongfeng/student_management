@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-26 11:28:47
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-26 11:28:56
+ * @LastEditTime : 2024-08-02 15:29:00
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -16,6 +16,8 @@ import utils.auth as auth
 
 
 def register():
+    """user register
+    """
     st.header("注册")
     username = st.text_input("用户名")
     email = st.text_input("邮箱")
@@ -28,6 +30,8 @@ def register():
 
 
 def login():
+    """user login
+    """
     st.header("登录")
     username_or_email = st.text_input("用户名或邮箱")
     password = st.text_input("密码", type="password")
@@ -41,6 +45,8 @@ def login():
 
 
 def change_password():
+    """Password change
+    """
     st.header("修改密码")
     username_or_email = st.text_input("用户名或邮箱")
     new_password = st.text_input("新密码", type="password")
@@ -52,6 +58,8 @@ def change_password():
 
 
 def main():
+    """main function
+    """
     st.sidebar.title("导航")
     choice = st.sidebar.radio("选择功能", ["注册", "登录", "修改密码"])
 

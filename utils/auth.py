@@ -5,12 +5,13 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-26 11:27:04
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-26 11:27:15
+ * @LastEditTime : 2024-08-02 15:29:15
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
-import bcrypt
 import sqlite3
+
+import bcrypt
 
 # 数据库连接
 conn = sqlite3.connect('users.db')
@@ -70,4 +71,6 @@ def change_password(username_or_email, new_password):
 
 
 def close_connection():
+    """conn close
+    """
     conn.close()
