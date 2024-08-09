@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-16 17:39:14
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-21 21:19:31
+ * @LastEditTime : 2024-08-09 10:46:21
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -21,7 +21,7 @@ if "logPath" not in st.session_state:
     # 判断日志文件是否存在,不存在则创建
     if not os.path.exists(st.session_state.logPath):
         os.makedirs(os.path.dirname(st.session_state.logPath))
-        with open(st.session_state.logPath, "w") as f:
+        with open(st.session_state.logPath, "w", encoding="utf-8") as f:
             f.write("")
 
 # 配置全局logging
