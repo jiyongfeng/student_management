@@ -5,17 +5,18 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-13 10:14:11
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-16 18:23:42
+ * @LastEditTime : 2024-08-13 16:51:24
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
 import streamlit as st
 
 from utils.logger import logger
+from utils import auth
 
 # 定义会话状态、用户名、页面等全局变量
-if 'username' not in st.session_state:
-    st.session_state['username'] = 'admin'
+if 'user_name' not in st.session_state:
+    st.session_state['user_name'] = 'admin'
 if 'page' not in st.session_state:
     st.session_state['page'] = 'login_page'
 if "logged_in" not in st.session_state:
@@ -27,7 +28,7 @@ if "role" not in st.session_state:
 ROLES = [None, "Requester", "Responder", "Admin"]
 
 
-@st.experimental_dialog("请确认是否退出系统?")
+@st.dialog("请确认是否退出系统?")
 def logout_confim():
     """ 退出系统
     """
@@ -35,34 +36,35 @@ def logout_confim():
     col2, col3 = st.columns([1, 1], gap="small")
     with col2:
         if st.button("退出"):
-            st.session_state.logged_in = False
-            logger.info("%s 退出系统", st.session_state.username)
+            logger.info("%s 退出系统", st.session_state.user_name)
+            st.session_state.clear()
             st.rerun()
     with col3:
         if st.button("取消"):
-            st.session_state.clear()
+
             st.rerun()
 
 
 def login():
     """用户登录
     """
-    username = st.text_input("用户名", help="请输入用户名", placeholder="请输入用户名")
+    user_name = st.text_input("用户名", help="请输入用户名或邮箱", placeholder="请输入用户名或邮箱")
     password = st.text_input("密码", type="password",
                              help="请输入密码", placeholder="请输入密码")
     # role = st.selectbox("Choose your role", ROLES)
 
     if st.button("登录"):
-        if username == st.secrets.admin.username and password == st.secrets.admin.password:
+        user_name = auth.authenticate_user(user_name, password)
+        if user_name:
             st.session_state.logged_in = True
-            st.session_state.username = username
+            st.session_state.user_name = user_name
             st.success("登录成功！")
             # 记录日志
-            logger.info("%s 登录系统成功", st.session_state.username)
+            logger.info("%s 登录系统成功", st.session_state.user_name)
             st.rerun()
         else:
             st.error("用户名或密码错误！")
-            logger.error("%s 登录系统失败", st.session_state.username)
+            logger.error("%s 登录系统失败", st.session_state.user_name)
 
 
 def loginfo():
@@ -70,11 +72,14 @@ def loginfo():
     """
     st.header("欢迎来到学生成绩管理系统", divider="rainbow")
     col1, col2, col3 = st.columns(
-        [5, 1, 1], vertical_alignment="center")
+        [22, 2, 2], vertical_alignment="center")
     with col1:
         st.write("")
     with col2:
-        st.write(st.session_state.username)
+        if st.button(f"{st.session_state.user_name}"):
+            # 切换到用户设置页面
+            pass
+
     with col3:
         if st.button("注销"):
             logout_confim()

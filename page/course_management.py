@@ -49,8 +49,8 @@ def insert_course(course: dict):
             execute_sql(connection, sql, (
                 course['course_name'],
                 course['sort'],
-                st.session_state.username,
-                st.session_state.username,
+                st.session_state.user_name,
+                st.session_state.user_name,
                 datetime.now(),
                 datetime.now()
             ), commit=True)
@@ -73,7 +73,7 @@ def update_course(course: dict):
                 course['course_name'],
                 course['sort'],
                 course['create_by'],
-                st.session_state.username,
+                st.session_state.user_name,
                 datetime.now(),
                 course['cou_id']
             ), commit=True)

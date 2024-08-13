@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-17 20:08:04
+ * @LastEditTime : 2024-08-13 16:36:54
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -18,7 +18,7 @@ from utils.database import get_connection, check_and_insert
 from utils.logger import logger
 
 
-@st.experimental_dialog("添加成绩")
+@st.dialog("添加成绩")
 def add_score():
     connection = get_connection()
     cursor = connection.cursor()
@@ -59,7 +59,7 @@ def add_score():
 
             score = st.number_input("成绩", min_value=0.0,
                                     max_value=150.0, placeholder="请输入成绩")
-            create_by = st.session_state.username
+            create_by = st.session_state.user_name
             if st.button("提交"):
                 sql = "INSERT INTO tb_scores (student_id, exam_id, course_id, score, create_by) VALUES (%s, %s, %s, %s, %s)"
                 cursor.execute(
@@ -144,7 +144,7 @@ def view_scores():
         st.write("暂无符合条件的成绩记录")
 
 
-@st.experimental_dialog("修改成绩")
+@st.dialog("修改成绩")
 def edit_score():
     st.subheader("修改成绩")
     connection = get_connection()
@@ -171,7 +171,7 @@ def edit_score():
 
         new_score = st.number_input(
             "新成绩", min_value=0.0, max_value=100.0, placeholder=f'{selected_score.split('-')[-1]}', value=None)
-        updated_by = st.session_state.username
+        updated_by = st.session_state.user_name
         if st.button("提交"):
             with connection.cursor() as cursor:
                 sql = "UPDATE tb_scores SET score=%s, updated_by=%s WHERE score_id=%s"
@@ -186,7 +186,7 @@ def edit_score():
 # 导入csv格式的成绩文件
 
 
-@st.experimental_dialog("导入成绩")
+@st.dialog("导入成绩")
 def import_scores():
 
     uploaded_file = st.file_uploader("选择一个 CSV 文件", type=['csv'])
@@ -254,7 +254,7 @@ def import_scores():
                     connection.close()
 
 
-col1, col2, col3, col4 = st.columns([3, 1, 1, 1], vertical_alignment="center")
+col1, col2, col3, col4 = st.columns([10, 1, 1, 1], vertical_alignment="center")
 with col1:
     st.subheader("成绩查询")
 with col2:

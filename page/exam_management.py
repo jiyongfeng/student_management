@@ -55,8 +55,8 @@ def insert_exam(exam: dict):
             execute_sql(connection, sql, (
                 exam['exam_name'],
                 exam['exam_date'],
-                st.session_state.username,
-                st.session_state.username,
+                st.session_state.user_name,
+                st.session_state.user_name,
                 datetime.now(),
                 datetime.now()
             ), commit=True)
@@ -80,7 +80,7 @@ def update_exam(exam: dict):
             exam['exam_name'],
             exam['exam_date'],
             exam['create_by'],
-            st.session_state.username,
+            st.session_state.user_name,
             datetime.now(),
             exam['exam_id']
         ), commit=True)
