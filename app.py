@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-13 10:14:11
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-08-13 16:51:24
+ * @LastEditTime : 2024-08-15 11:06:18
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -15,8 +15,12 @@ from utils.logger import logger
 from utils import auth
 
 # 定义会话状态、用户名、页面等全局变量
+if 'user_info' not in st.session_state:
+    st.session_state['user_info'] = None
 if 'user_name' not in st.session_state:
-    st.session_state['user_name'] = 'admin'
+    st.session_state['user_name'] = None
+if 'user_email' not in st.session_state:
+    st.session_state['user_email'] = None
 if 'page' not in st.session_state:
     st.session_state['page'] = 'login_page'
 if "logged_in" not in st.session_state:
@@ -58,9 +62,12 @@ def login():
         if user_name:
             st.session_state.logged_in = True
             st.session_state.user_name = user_name
+            st.session_state.user_info = auth.get_user_info(user_name)
+            st.session_state.user_email = auth.get_user_info(user_name)[
+                'email']
             st.success("登录成功！")
             # 记录日志
-            logger.info("%s 登录系统成功", st.session_state.user_name)
+            logger.info("%s 登录系统成功", f'{st.session_state.user_name}')
             st.rerun()
         else:
             st.error("用户名或密码错误！")

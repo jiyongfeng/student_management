@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-18 14:46:56
+ * @LastEditTime : 2024-08-15 09:42:33
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -20,7 +20,6 @@ from utils.database import (execute_sql, get_connection, handle_database_error,
 from utils.logger import logger
 
 
-@st.cache_data
 def load_courses():
     """加载课程
 
