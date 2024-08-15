@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-26 11:27:04
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-08-15 11:47:27
+ * @LastEditTime : 2024-08-15 11:56:28
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -127,6 +127,28 @@ def change_password(user_name, new_password):
         handle_general_error(general_error)
     finally:
         conn.close()
+
+
+def get_user_info(user_name):
+    """
+    Gets the information of a user from the database.
+    """
+    if not user_name:
+        raise ValueError("user_name cannot be None or empty")
+
+    connection = get_connection()
+    try:
+        with connection.cursor() as cursor:
+            sql = "SELECT * FROM tb_student WHERE user_name = %s"
+            cursor.execute(sql, (user_name))
+            result = cursor.fetchone()
+            return result
+    except pymysql.MySQLError as db_error:
+        handle_database_error(db_error)
+    except Exception as general_error:
+        handle_general_error(general_error)
+    finally:
+        connection.close()
 
 
 def update_user_info(user_name, **kwargs):
