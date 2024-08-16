@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-13 10:14:11
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-08-15 11:06:18
+ * @LastEditTime : 2024-08-15 21:52:50
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -79,7 +79,7 @@ def loginfo():
     """
     st.header("欢迎来到学生成绩管理系统", divider="rainbow")
     col1, col2, col3 = st.columns(
-        [22, 2, 2], vertical_alignment="center")
+        [20, 5, 3], vertical_alignment="center")
     with col1:
         st.write("")
     with col2:

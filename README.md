@@ -2,10 +2,17 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-17 09:20:23
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-07-17 09:32:10
+ * @LastEditTime : 2024-08-16 15:43:15
  * @Description  :
  * Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 -->
+
+- [学生成绩管理系统](#学生成绩管理系统)
+  - [1. 已实现功能](#1-已实现功能)
+    - [用户管理](#用户管理)
+    - [基本管理](#基本管理)
+    - [成绩管理](#成绩管理)
+  - [2. 待实现功能](#2-待实现功能)
 
 # 学生成绩管理系统
 
@@ -13,10 +20,14 @@
 
 ## 1. 已实现功能
 
-### 用户登录
+### 用户管理
 
-实现简单的用户登录功能，账户、密码保存在 secrets.toml 文件中。
+实现用户登录、修改个人信息功能，账户、密码保存在数据库。
 ![login_page_screenshot](images/login_page_screenshot.png)
+
+- [x] 支持用户名、邮箱认证
+- [x] 支持密码修改
+- [x] 支持邮箱修改
 
 ### 基本管理
 
@@ -37,4 +48,4 @@
 
 1. 课程成绩的统计功能。
 2. 数据库的备份和恢复功能。
-3. 支持多个用户登录的功能。
+3. ~~[ 已完成 ]支持多个用户登录的功能。~~

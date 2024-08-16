@@ -5,11 +5,12 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-08-13 16:36:54
+ * @LastEditTime : 2024-08-16 15:45:38
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
 
+from datetime import datetime
 import pandas as pd
 import pymysql
 import streamlit as st
@@ -18,7 +19,7 @@ from utils.database import get_connection, check_and_insert
 from utils.logger import logger
 
 
-@st.dialog("添加成绩")
+@st.dialog("添加成绩", width='large')
 def add_score():
     connection = get_connection()
     cursor = connection.cursor()
@@ -56,14 +57,29 @@ def add_score():
             selected_course_name = st.selectbox(
                 "选择课程", list(course_dict.keys()))
             selected_course_id = course_dict[selected_course_name]
-
+            # 新增成绩,必填
             score = st.number_input("成绩", min_value=0.0,
                                     max_value=150.0, placeholder="请输入成绩")
+            class_average = st.number_input(
+                "班级平均分", min_value=0.0, max_value=150.0, placeholder="请输入班级平均分")
+            grade_average = st.number_input(
+                "年级平均分", min_value=0.0, max_value=150.0, placeholder="请输入年级平均分")
+            class_highest_score = st.number_input(
+                "班级最高分", min_value=0.0, max_value=150.0, placeholder="请输入班级最高分")
+            grade_highest_score = st.number_input(
+                "年级最高分", min_value=0.0, max_value=150.0, placeholder="请输入年级最高分")
+            if selected_course_name != '三总' and selected_course_name != '全总':
+                grade = st.selectbox(
+                    "等第", ('A', 'B', 'C', 'D', 'E'), placeholder="请输入等第")
+                A_grade_threshold = st.number_input(
+                    "A等分数值", min_value=0.0, max_value=150.0, placeholder="请输入A等分数值")
+
             create_by = st.session_state.user_name
+
             if st.button("提交"):
-                sql = "INSERT INTO tb_scores (student_id, exam_id, course_id, score, create_by) VALUES (%s, %s, %s, %s, %s)"
+                sql = "INSERT INTO tb_scores (student_id, exam_id, course_id, score, class_average, grade_average, class_highest_score, grade_highest_score, grade, A_grade_threshold,create_by,create_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s)"
                 cursor.execute(
-                    sql, (selected_student_id, selected_exam_id, selected_course_id, score, create_by))
+                    sql, (selected_student_id, selected_exam_id, selected_course_id, score, class_average, grade_average, class_highest_score, grade_highest_score, grade, A_grade_threshold, create_by, datetime.now()))
                 connection.commit()
                 st.success("成绩登记成功")
                 logger.info("%s 成功登记成绩", selected_student_name)
@@ -254,7 +270,7 @@ def import_scores():
                     connection.close()
 
 
-col1, col2, col3, col4 = st.columns([10, 1, 1, 1], vertical_alignment="center")
+col1, col2, col3, col4 = st.columns([10, 4, 4, 4], vertical_alignment="center")
 with col1:
     st.subheader("成绩查询")
 with col2:
