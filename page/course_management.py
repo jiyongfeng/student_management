@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-08-15 09:42:33
+ * @LastEditTime : 2024-09-05 20:27:25
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -29,9 +29,13 @@ def load_courses():
     connection = get_connection()
     if connection:
         try:
-            sql = "SELECT cou_id, course_name, sort, create_by,updated_by,create_at,updated_at FROM tb_course order by sort asc"
-            courses = execute_sql(connection, sql)
-            return courses
+            sql = """
+                SELECT cou_id, course_name, sort, create_by,updated_by,create_at,updated_at
+                FROM tb_course
+                ORDER BY sort ASC
+            """
+            course_data = execute_sql(connection, sql)
+            return course_data
         finally:
             connection.close()
 

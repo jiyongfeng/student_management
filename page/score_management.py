@@ -5,7 +5,7 @@
  * @Author       : JIYONGFENG jiyongfeng@163.com
  * @Date         : 2024-07-12 09:50:27
  * @LastEditors  : JIYONGFENG jiyongfeng@163.com
- * @LastEditTime : 2024-08-16 15:45:38
+ * @LastEditTime : 2024-09-23 11:29:08
  * @Description  :
  * @Copyright (c) 2024 by ZEZEDATA Technology CO, LTD, All Rights Reserved.
 """
@@ -29,7 +29,7 @@ def add_score():
         cursor.execute(sql)
         students = cursor.fetchall()
         students = sorted(students, key=lambda x: x['student_name'])
-        student_dict = {student['student_name']                        : student['stu_id'] for student in students}
+        student_dict = {student['student_name']: student['stu_id'] for student in students}
         selected_student_name = st.selectbox("选择学生", list(student_dict.keys()))
         selected_student_id = student_dict[selected_student_name]
 
@@ -68,18 +68,21 @@ def add_score():
                 "班级最高分", min_value=0.0, max_value=150.0, placeholder="请输入班级最高分")
             grade_highest_score = st.number_input(
                 "年级最高分", min_value=0.0, max_value=150.0, placeholder="请输入年级最高分")
+            remark = st.text_area("备注", placeholder="请输入备注")
+            attachment = st.file_uploader(
+                "上传附件", type=['jpg', 'png', 'bmp', 'pdf'])
             if selected_course_name != '三总' and selected_course_name != '全总':
                 grade = st.selectbox(
                     "等第", ('A', 'B', 'C', 'D', 'E'), placeholder="请输入等第")
-                A_grade_threshold = st.number_input(
+                a_grade_threshold = st.number_input(
                     "A等分数值", min_value=0.0, max_value=150.0, placeholder="请输入A等分数值")
 
             create_by = st.session_state.user_name
 
             if st.button("提交"):
-                sql = "INSERT INTO tb_scores (student_id, exam_id, course_id, score, class_average, grade_average, class_highest_score, grade_highest_score, grade, A_grade_threshold,create_by,create_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s)"
+                sql = "INSERT INTO tb_scores (student_id, exam_id, course_id, score, class_average, grade_average, class_highest_score, grade_highest_score, grade, a_grade_threshold,remark,attachment,create_by,create_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s)"
                 cursor.execute(
-                    sql, (selected_student_id, selected_exam_id, selected_course_id, score, class_average, grade_average, class_highest_score, grade_highest_score, grade, A_grade_threshold, create_by, datetime.now()))
+                    sql, (selected_student_id, selected_exam_id, selected_course_id, score, class_average, grade_average, class_highest_score, grade_highest_score, grade, a_grade_threshold, remark, attachment, create_by, datetime.now()))
                 connection.commit()
                 st.success("成绩登记成功")
                 logger.info("%s 成功登记成绩", selected_student_name)
@@ -112,27 +115,27 @@ def view_scores():
 
             if selected_exam == "所有项目" and selected_course == "所有学科":
                 # 显示所有成绩
-                cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
+                cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score, s.remark, s.attachment FROM tb_scores s "
                                "INNER JOIN tb_student st ON s.student_id = st.stu_id "
                                "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
                                "INNER JOIN tb_course c ON s.course_id = c.cou_id")
             elif selected_exam == "所有项目" and selected_course != "所有学科":
                 # 根据学科筛选成绩
-                cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
+                cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score, s.remark, s.attachment FROM tb_scores s "
                                "INNER JOIN tb_student st ON s.student_id = st.stu_id "
                                "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
                                "INNER JOIN tb_course c ON s.course_id = c.cou_id "
                                "WHERE c.course_name = %s", (selected_course,))
             elif selected_exam != "所有项目" and selected_course == "所有学科":
                 # 根据项目筛选成绩
-                cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
+                cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score, s.remark, s.attachment FROM tb_scores s "
                                "INNER JOIN tb_student st ON s.student_id = st.stu_id "
                                "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
                                "INNER JOIN tb_course c ON s.course_id = c.cou_id "
                                "WHERE e.exam_name = %s", (selected_exam,))
             else:
                 # 根据项目和学科筛选成绩
-                cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score FROM tb_scores s "
+                cursor.execute("SELECT s.score_id, st.student_name, e.exam_name, e.exam_date, c.course_name,c.sort, s.score,s.remark, s.attachment FROM tb_scores s "
                                "INNER JOIN tb_student st ON s.student_id = st.stu_id "
                                "INNER JOIN tb_exam e ON s.exam_id = e.exam_id "
                                "INNER JOIN tb_course c ON s.course_id = c.cou_id "
@@ -150,7 +153,7 @@ def view_scores():
         df_scores_sorted = df_scores.sort_values(
             by=['exam_date', 'sort'])
         st.dataframe(df_scores_sorted, use_container_width=True, column_order=[
-                     'student_name', 'exam_name', 'exam_date', 'course_name', 'score'], hide_index=True)
+                     'student_name', 'exam_name', 'exam_date', 'course_name', 'score', 'remark', 'attachment'], hide_index=True)
 
         if selected_course != '所有学科' and selected_exam == '所有项目':
             st.line_chart(df_scores, x='exam_name',
